@@ -334,7 +334,62 @@ def cola_cocina():
 # =====================================================
 
 def reporte_dia():
-    pass
+    print("\n" + "═"*40)
+    print("        REPORTE DEL DÍA              ")
+    print("═"*40)
+
+    # Validar que haya ventas registradas
+    if len(historial_ventas) == 0:
+        print(" [!] No hay ventas registradas hoy.")
+        print("═"*40)
+        return
+
+    # ─────────────────────────────────────────
+    # CONTEO DE PLATOS VENDIDOS
+    # ─────────────────────────────────────────
+    conteo = {}
+
+    for plato in historial_ventas:
+        if plato in conteo:
+            conteo[plato] += 1
+        else:
+            conteo[plato] = 1
+
+    # ─────────────────────────────────────────
+    # DETALLE DE VENTAS
+    # ─────────────────────────────────────────
+    print(f" Total de platos vendidos: {len(historial_ventas)}")
+    print("-" * 40)
+    print(f" {'Plato':<22} {'Cant':>4}  {'Subtotal':>9}")
+    print("-" * 40)
+
+    total_bruto = 0.0
+
+    for plato, cantidad in conteo.items():
+        subtotal_plato = precios[plato] * cantidad
+        total_bruto += subtotal_plato
+        print(f" {plato:<22} {cantidad:>4}  S/. {subtotal_plato:>6.2f}")
+
+    print("-" * 40)
+
+    # ─────────────────────────────────────────
+    # TOTALES
+    # ─────────────────────────────────────────
+    igv_total = total_bruto * 0.18
+    total_con_igv = total_bruto + igv_total
+
+    print(f" Subtotal (sin IGV)  : S/. {total_bruto:>7.2f}")
+    print(f" IGV recaudado (18%) : S/. {igv_total:>7.2f}")
+    print("-" * 40)
+    print(f" TOTAL DEL DÍA       : S/. {total_con_igv:>7.2f}")
+
+    # ─────────────────────────────────────────
+    # PLATO MÁS VENDIDO
+    # ─────────────────────────────────────────
+    plato_estrella = max(conteo, key=conteo.get)
+    print("-" * 40)
+    print(f" Plato más vendido : {plato_estrella}")
+    print("═"*40)
 
 
 # =====================================================
