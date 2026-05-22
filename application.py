@@ -2,13 +2,6 @@
 # VARIABLES GLOBALES
 # =====================================================
 
-# Precios de los platos para el proceso de facturación
-precios = {
-    "Seco de pollo": 15.50,
-    "Tallarín rojo": 14.00,
-    "Estofado de pollo": 16.00
-}
-
 # Historial acumulado del día (opcional, para que Pablo luego haga su reporte)
 historial_ventas = []
 
@@ -31,37 +24,49 @@ stock = {
 platos = {
 
     "Seco de pollo": {
-        "Pollo": 1,
-        "Arroz": 1,
-        "Papa": 1,
-        "Culantro": 1,
-        "Cebolla": 1,
-        "Ají amarillo": 1
+        "ingredientes": {
+            "Pollo": 1,
+            "Arroz": 1,
+            "Papa": 1,
+            "Culantro": 1,
+            "Cebolla": 1,
+            "Ají amarillo": 1
+        },
+        "precio": 15.50,
+        "tiempo_prep": 12
     },
 
     "Tallarín rojo": {
-        "Fideos": 1,
-        "Pollo": 1,
-        "Tomate": 2,
-        "Cebolla": 1,
-        "Ajo": 1,
-        "Aceite": 1
+        "ingredientes": {
+            "Fideos": 1,
+            "Pollo": 1,
+            "Tomate": 2,
+            "Cebolla": 1,
+            "Ajo": 1,
+            "Aceite": 1
+        },
+        "precio": 14.00,
+        "tiempo_prep": 10
     },
 
     "Estofado de pollo": {
-        "Pollo": 1,
-        "Papa": 1,
-        "Zanahoria": 1,
-        "Arvejas": 1,
-        "Tomate": 1,
-        "Cebolla": 1
+        "ingredientes": {
+            "Pollo": 1,
+            "Papa": 1,
+            "Zanahoria": 1,
+            "Arvejas": 1,
+            "Tomate": 1,
+            "Cebolla": 1
+        },
+        "precio": 16.00,
+        "tiempo_prep": 15
     }
 }
 
 pedidos = [
-    "Seco de pollo",
-    "Tallarín rojo",
-    "Estofado de pollo"
+    {"plato": "Seco de pollo",      "estado": "Pendiente"},
+    {"plato": "Tallarín rojo",      "estado": "Pendiente"},
+    {"plato": "Estofado de pollo",  "estado": "Pendiente"}
 ]
 
 
@@ -87,7 +92,7 @@ def tomar_pedido():
             disponible = True
 
             # VERIFICAR STOCK
-            for clave, valor in platos["Seco de pollo"].items():
+            for clave, valor in platos["Seco de pollo"]["ingredientes"].items():
 
                 if stock[clave] < valor:
 
@@ -100,7 +105,7 @@ def tomar_pedido():
 
                 print("Tu pedido ha sido seleccionado correctamente.")
 
-                for clave, valor in platos["Seco de pollo"].items():
+                for clave, valor in platos["Seco de pollo"]["ingredientes"].items():
 
                     stock[clave] -= valor
 
@@ -119,7 +124,7 @@ def tomar_pedido():
             disponible = True
 
             # VERIFICAR STOCK
-            for clave, valor in platos["Tallarín rojo"].items():
+            for clave, valor in platos["Tallarín rojo"]["ingredientes"].items():
 
                 if stock[clave] < valor:
 
@@ -132,7 +137,7 @@ def tomar_pedido():
 
                 print("Tu pedido ha sido seleccionado correctamente.")
 
-                for clave, valor in platos["Tallarín rojo"].items():
+                for clave, valor in platos["Tallarín rojo"]["ingredientes"].items():
 
                     stock[clave] -= valor
 
@@ -151,7 +156,7 @@ def tomar_pedido():
             disponible = True
 
             # VERIFICAR STOCK
-            for clave, valor in platos["Estofado de pollo"].items():
+            for clave, valor in platos["Estofado de pollo"]["ingredientes"].items():
 
                 if stock[clave] < valor:
 
@@ -164,7 +169,7 @@ def tomar_pedido():
 
                 print("Tu pedido ha sido seleccionado correctamente.")
 
-                for clave, valor in platos["Estofado de pollo"].items():
+                for clave, valor in platos["Estofado de pollo"]["ingredientes"].items():
 
                     stock[clave] -= valor
 
@@ -284,10 +289,10 @@ def facturar_mesa():
     print("-" * 40)
     
     # ESTRUCTURA REPETITIVA: Recorre cada plato que se encuentra en la lista de pedidos
-    for plato in pedidos:
-        # Busca el precio asignado en nuestro diccionario de precios
-        precio_plato = precios[plato]
-        print(f" • {plato:<20} : S/. {precio_plato:>6.2f}")
+    for pedido in pedidos:
+        nombre_plato = pedido["plato"]
+        precio_plato = platos[nombre_plato]["precio"]
+        print(f" • {nombre_plato:<20} : S/. {precio_plato:>6.2f}")
         # Acumulador para obtener la suma de los platos
         subtotal += precio_plato
 
@@ -309,8 +314,8 @@ def facturar_mesa():
     
     if confirmar == "S":
         # Antes de vaciar la mesa, registramos los platos en el historial para el reporte final del día
-        for plato in pedidos:
-            historial_ventas.append(plato)
+        for pedido in pedidos:
+            historial_ventas.append(pedido["plato"])
             
         # Limpiamos la lista de pedidos (la mesa queda libre y el mozo puede volver a tomar otra orden)
         pedidos.clear()
@@ -326,7 +331,127 @@ def facturar_mesa():
 # =====================================================
 
 def cola_cocina():
-    pass
+
+    ESTADOS = ["Pendiente", "En preparación", "Listo"]
+
+    while True:
+
+        print("\n╔══════════════════════════════════╗")
+        print("║         COLA DE COCINA          ║")
+        print("╠══════════════════════════════════╣")
+        print("║ 1. Ver cola de pedidos          ║")
+        print("║ 2. Cambiar estado de un pedido  ║")
+        print("║ 3. Atender siguiente            ║")
+        print("║ 4. Tiempo estimado de espera    ║")
+        print("║ 0. Volver al menú principal     ║")
+        print("╚══════════════════════════════════╝")
+
+        opcion = input("Seleccione una opción: ")
+
+
+        # =====================================
+        # VER COLA DE PEDIDOS
+        # =====================================
+        if opcion == "1":
+
+            if len(pedidos) == 0:
+                print("\n [!] No hay pedidos en la cola.")
+            else:
+                for i in range(len(pedidos)):
+                    print(i + 1, "-", pedidos[i]["plato"], "-", pedidos[i]["estado"])
+
+
+        # =====================================
+        # CAMBIAR ESTADO DE UN PEDIDO
+        # =====================================
+        elif opcion == "2":
+
+            if len(pedidos) == 0:
+                print("\n [!] No hay pedidos en la cola.")
+            else:
+                for i in range(len(pedidos)):
+                    print(i + 1, "-", pedidos[i]["plato"], "-", pedidos[i]["estado"])
+                print("-" * 40)
+
+                numero = int(input("Ingrese el N° del pedido a actualizar: "))
+
+                if 1 <= numero <= len(pedidos):
+                    pedido     = pedidos[numero - 1]
+                    idx_actual = ESTADOS.index(pedido["estado"])
+                    idx_nuevo  = (idx_actual + 1) % len(ESTADOS)
+                    pedido["estado"] = ESTADOS[idx_nuevo]
+                    print(f"\n [✓] '{pedido['plato']}' → {pedido['estado']}")
+                else:
+                    print("\n [!] Número inválido.")
+
+
+        # =====================================
+        # ATENDER SIGUIENTE PEDIDO
+        # =====================================
+        elif opcion == "3":
+
+            encontrado = False
+
+            # Buscar primero uno "Pendiente"
+            for i in range(len(pedidos)):
+                if pedidos[i]["estado"] == "Pendiente" and not encontrado:
+                    pedidos[i]["estado"] = "En preparación"
+                    print(f"\n [✓] '{pedidos[i]['plato']}' pasó a → En preparación")
+                    encontrado = True
+
+            # Si no hay pendientes, buscar uno "En preparación"
+            if not encontrado:
+                for i in range(len(pedidos)):
+                    if pedidos[i]["estado"] == "En preparación" and not encontrado:
+                        pedidos[i]["estado"] = "Listo"
+                        print(f"\n [✓] '{pedidos[i]['plato']}' pasó a → Listo")
+                        encontrado = True
+
+            if not encontrado:
+                print("\n [✓] Todos los pedidos ya están listos.")
+
+
+        # =====================================
+        # TIEMPO ESTIMADO DE ESPERA
+        # =====================================
+        elif opcion == "4":
+
+            cantidad_pendientes = 0
+            tiempo_total        = 0
+
+            for i in range(len(pedidos)):
+                if pedidos[i]["estado"] != "Listo":
+                    cantidad_pendientes += 1
+                    tiempo_total        += platos[pedidos[i]["plato"]]["tiempo_prep"]
+
+            if cantidad_pendientes == 0:
+                print("\n [✓] No hay pedidos pendientes. ¡La cocina está al día!")
+            else:
+                print(f"\n Pedidos en espera  : {cantidad_pendientes}")
+                print(f" Tiempo estimado    : {tiempo_total} minutos")
+                print("\n Detalle:")
+                print("-" * 40)
+                for i in range(len(pedidos)):
+                    if pedidos[i]["estado"] != "Listo":
+                        nombre = pedidos[i]["plato"]
+                        t      = platos[nombre]["tiempo_prep"]
+                        estado = pedidos[i]["estado"]
+                        print(" -", nombre, "-", t, "min -", estado)
+                print("-" * 40)
+
+
+        # =====================================
+        # VOLVER AL MENÚ PRINCIPAL
+        # =====================================
+        elif opcion == "0":
+            break
+
+
+        # =====================================
+        # OPCIÓN INVÁLIDA
+        # =====================================
+        else:
+            print(" [!] Opción inválida.")
 
 
 # =====================================================
@@ -366,7 +491,7 @@ def reporte_dia():
     total_bruto = 0.0
 
     for plato, cantidad in conteo.items():
-        subtotal_plato = precios[plato] * cantidad
+        subtotal_plato = platos[plato]["precio"] * cantidad
         total_bruto += subtotal_plato
         print(f" {plato:<22} {cantidad:>4}  S/. {subtotal_plato:>6.2f}")
 
