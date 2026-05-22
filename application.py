@@ -2,6 +2,16 @@
 # VARIABLES GLOBALES
 # =====================================================
 
+# Precios de los platos para el proceso de facturación
+precios = {
+    "Seco de pollo": 15.50,
+    "Tallarín rojo": 14.00,
+    "Estofado de pollo": 16.00
+}
+
+# Historial acumulado del día (opcional, para que Pablo luego haga su reporte)
+historial_ventas = []
+
 stock = {
     "Pollo": 20,
     "Arroz": 30,
@@ -259,7 +269,56 @@ def control_stock():
 # =====================================================
 
 def facturar_mesa():
-    pass
+    print("\n" + "═"*40)
+    print("           FACTURACIÓN DE MESA          ")
+    print("═"*40)
+    
+    # Validación: Si Jean Paul aún no ha agregado nada a la lista de pedidos, no hay nada que cobrar
+    if len(pedidos) == 0:
+        print(" [!] No hay consumos registrados en este momento.")
+        print("═"*40)
+        return  # Sale de la función y regresa al menú principal
+
+    subtotal = 0.0
+    print(" Detalle del consumo actual:")
+    print("-" * 40)
+    
+    # ESTRUCTURA REPETITIVA: Recorre cada plato que se encuentra en la lista de pedidos
+    for plato in pedidos:
+        # Busca el precio asignado en nuestro diccionario de precios
+        precio_plato = precios[plato]
+        print(f" • {plato:<20} : S/. {precio_plato:>6.2f}")
+        # Acumulador para obtener la suma de los platos
+        subtotal += precio_plato
+
+    print("-" * 40)
+    
+    # CÁLCULOS DE IGV Y TOTAL A PAGAR
+    igv = subtotal * 0.18
+    total_pagar = subtotal + igv
+
+    # Impresión de montos formateados a 2 decimales (.2f)
+    print(f" Subtotal           : S/. {subtotal:>6.2f}")
+    print(f" IGV (18%)           : S/. {igv:>6.2f}")
+    print("-" * 40)
+    print(f" TOTAL A PAGAR      : S/. {total_pagar:>6.2f}")
+    print("═"*40)
+    
+    # PROCESO DE CIERRE Y LIBERACIÓN (Modifica variables globales en tiempo real)
+    confirmar = input("¿Confirmar el pago y cerrar la cuenta? (S/N): ").upper()
+    
+    if confirmar == "S":
+        # Antes de vaciar la mesa, registramos los platos en el historial para el reporte final del día
+        for plato in pedidos:
+            historial_ventas.append(plato)
+            
+        # Limpiamos la lista de pedidos (la mesa queda libre y el mozo puede volver a tomar otra orden)
+        pedidos.clear()
+        print("\n [✓] Cuenta pagada con éxito. Mesa liberada.")
+    else:
+        print("\n [!] Operación cancelada. El consumo sigue pendiente de pago.")
+    
+    print("═"*40)
 
 
 # =====================================================
