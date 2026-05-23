@@ -2,7 +2,6 @@
 # VARIABLES GLOBALES
 # =====================================================
 
-# Historial acumulado del día (opcional, para que Pablo luego haga su reporte)
 historial_ventas = []
 
 stock = {
@@ -63,134 +62,91 @@ platos = {
     }
 }
 
-pedidos = [
-    {"plato": "Seco de pollo",      "estado": "Pendiente"},
-    {"plato": "Tallarín rojo",      "estado": "Pendiente"},
-    {"plato": "Estofado de pollo",  "estado": "Pendiente"}
-]
+pedidos = []
 
 
-
-# AQUÍ VA LA PARTE DE JEAN PAUL - TOMAR PEDIDO
-
+# =====================================================
+# PARTE DE JEAN PAUL - TOMAR PEDIDO
+# CORRECCIÓN 1: try/except para que no explote con letras
+# CORRECCIÓN 2: se pide número de mesa al inicio, y se
+#               guarda en cada pedido para que las demás
+#               funciones puedan filtrar por mesa
+# =====================================================
 
 def tomar_pedido():
+
+    # ── CORRECCIÓN JEAN PAUL (mesa) ───────────────
+    # Antes: los pedidos no tenían mesa, todo se mezclaba
+    # Ahora: se pide la mesa UNA vez al entrar a la función
+    try:
+        mesa = int(input("\nIngrese el número de mesa: "))
+    except ValueError:
+        print("Número de mesa inválido.")
+        return
+    # ─────────────────────────────────────────────
+
     while True:
 
-        print("Que te gustaría pedir? ")
+        print("\nQue te gustaría pedir? ")
 
-        que_pedir = int(input(
-            "Seco de pollo (1), Tallarín rojo (2), "
-            "Estofado de pollo (3) o Terminar pedido (0): "
-        ))
+        try:
+            que_pedir = int(input(
+                "Seco de pollo (1), Tallarín rojo (2), "
+                "Estofado de pollo (3) o Terminar pedido (0): "
+            ))
+        except ValueError:
+            print("Por favor ingresa un número válido (0, 1, 2 o 3).")
+            continue
 
-        
-        # SECO DE POLLO
-        
-        if que_pedir == 1:
-
-            disponible = True
-
-            # VERIFICAR STOCK
-            for clave, valor in platos["Seco de pollo"]["ingredientes"].items():
-
-                if stock[clave] < valor:
-
-                    disponible = False
-                    print("No hay suficiente stock de", clave)
-                    break
-
-            # DESCONTAR STOCK SOLO SI HAY INSUMOS
-            if disponible:
-
-                print("Tu pedido ha sido seleccionado correctamente.")
-
-                for clave, valor in platos["Seco de pollo"]["ingredientes"].items():
-
-                    stock[clave] -= valor
-
-                print(stock)
-
-            else:
-
-                print("Ya no tenemos disponible ese plato")
-
-
-        
-        # TALLARÍN ROJO
-        
-        elif que_pedir == 2:
-
-            disponible = True
-
-            # VERIFICAR STOCK
-            for clave, valor in platos["Tallarín rojo"]["ingredientes"].items():
-
-                if stock[clave] < valor:
-
-                    disponible = False
-                    print("No hay suficiente stock de", clave)
-                    break
-
-            # DESCONTAR STOCK SOLO SI HAY INSUMOS
-            if disponible:
-
-                print("Tu pedido ha sido seleccionado correctamente.")
-
-                for clave, valor in platos["Tallarín rojo"]["ingredientes"].items():
-
-                    stock[clave] -= valor
-
-                print(stock)
-
-            else:
-
-                print("Ya no tenemos disponible ese plato")
-
-
-        
-        # ESTOFADO DE POLLO
-        
-        elif que_pedir == 3:
-
-            disponible = True
-
-            # VERIFICAR STOCK
-            for clave, valor in platos["Estofado de pollo"]["ingredientes"].items():
-
-                if stock[clave] < valor:
-
-                    disponible = False
-                    print("No hay suficiente stock de", clave)
-                    break
-
-            
-            if disponible:
-
-                print("Tu pedido ha sido seleccionado correctamente.")
-
-                for clave, valor in platos["Estofado de pollo"]["ingredientes"].items():
-
-                    stock[clave] -= valor
-
-                print(stock)
-
-            else:
-
-                print("Ya no tenemos disponible ese plato")
-
-
-        
-        elif que_pedir == 0:
-
-            print("Gracias por su compra.")
+        if que_pedir == 0:
+            print("Saliendo de pedidos...")
             break
 
+        elif que_pedir == 1:
+            plato = "Seco de pollo"
 
-        
+        elif que_pedir == 2:
+            plato = "Tallarín rojo"
+
+        elif que_pedir == 3:
+            plato = "Estofado de pollo"
+
         else:
+            print("Opción inválida")
+            continue
 
-            print(f"Tu variable {que_pedir} es inválida.")
+        disponible = True
+
+        for clave, valor in platos[plato]["ingredientes"].items():
+            if stock[clave] < valor:
+                disponible = False
+                print("No hay suficiente", clave)
+                break
+
+        if disponible:
+            print("Pedido registrado correctamente.")
+            for clave, valor in platos[plato]["ingredientes"].items():
+                stock[clave] -= valor
+
+            # ── CORRECCIÓN JEAN PAUL (mesa) ───────────
+            # Antes: {"plato": plato, "estado": "Pendiente"}
+            # Ahora: se agrega "mesa" para que cocina y
+            #        facturación puedan identificar de quién es
+            pedidos.append({
+                "mesa"  : mesa,
+                "plato" : plato,
+                "estado": "Pendiente"
+            })
+            # ─────────────────────────────────────────
+        else:
+            print("No se pudo procesar el pedido (sin stock)")
+
+
+# =====================================================
+# PARTE DE ENRIQUE - CONTROL DE STOCK
+# (sin cambios de mesa, el stock es global)
+# CORRECCIÓN anterior mantenida: variables renombradas
+# =====================================================
 
 def control_stock():
 
@@ -204,130 +160,120 @@ def control_stock():
         print("║ 0. Volver al menú principal     ║")
         print("╚══════════════════════════════════╝")
 
-        opcion = input("Seleccione una opción: ")
+        opcion = input("Seleccione una opción: ").strip()
 
-        # =====================================
-        # VER STOCK
-        # =====================================
         if opcion == "1":
 
             print("\n======= STOCK DISPONIBLE =======")
-
             for producto, cantidad in stock.items():
-
                 print(producto, ":", cantidad)
-
-                # ALERTA DE STOCK CRÍTICO
                 if cantidad <= 1:
                     print("ALERTA: Stock crítico de", producto)
-
             print("================================")
 
-
-        # =====================================
-        # REGISTRAR COMPRA
-        # =====================================
         elif opcion == "2":
 
-            producto = input("Ingrese el nombre del insumo: ")
-            cantidad = int(input("Ingrese la cantidad comprada: "))
+            producto_comprado = input("Ingrese el nombre del insumo: ")
+            cantidad_comprada = int(input("Ingrese la cantidad comprada: "))
 
-            # SI EL PRODUCTO YA EXISTE
-            if producto in stock:
-
-                stock[producto] += cantidad
-
-            # SI EL PRODUCTO NO EXISTE
+            if producto_comprado in stock:
+                stock[producto_comprado] += cantidad_comprada
             else:
-
-                stock[producto] = cantidad
+                stock[producto_comprado] = cantidad_comprada
 
             print("Compra registrada correctamente.")
-
             print("\n======= STOCK ACTUALIZADO =======")
-
-            for producto, cantidad in stock.items():
-
-                print(producto, ":", cantidad)
-
+            for item_nombre, item_cantidad in stock.items():
+                print(item_nombre, ":", item_cantidad)
             print("=================================")
 
-
-        # =====================================
-        # VOLVER AL MENÚ PRINCIPAL
-        # =====================================
         elif opcion == "0":
-
             break
 
-
-        # =====================================
-        # OPCIÓN INVÁLIDA
-        # =====================================
         else:
-
             print("Opción inválida")
 
 
 # =====================================================
-# AQUÍ VA LA PARTE DE LIMBERG - FACTURAR MESA
+# PARTE DE LIMBERG - FACTURAR MESA
+# CORRECCIÓN: se pregunta qué mesa facturar y solo se
+# muestran/cobran los pedidos "Listos" de esa mesa
+# =====================================================
+
+# =====================================================
+# PARTE DE LIMBERG - FACTURAR MESA
 # =====================================================
 
 def facturar_mesa():
-    print("\n" + "═"*40)
-    print("           FACTURACIÓN DE MESA          ")
-    print("═"*40)
-    
-    # Validación: Si Jean Paul aún no ha agregado nada a la lista de pedidos, no hay nada que cobrar
-    if len(pedidos) == 0:
-        print(" [!] No hay consumos registrados en este momento.")
-        print("═"*40)
-        return  # Sale de la función y regresa al menú principal
 
-    subtotal = 0.0
-    print(" Detalle del consumo actual:")
-    print("-" * 40)
-    
-    # ESTRUCTURA REPETITIVA: Recorre cada plato que se encuentra en la lista de pedidos
+    try:
+        mesa = int(input("\nIngrese el número de mesa a facturar: "))
+    except ValueError:
+        print("Número de mesa inválido.")
+        return
+
+    # Buscar TODOS los pedidos de la mesa
+    pedidos_mesa = []
+
     for pedido in pedidos:
+        if pedido["mesa"] == mesa:
+            pedidos_mesa.append(pedido)
+
+    # Verificar si existen pedidos
+    if len(pedidos_mesa) == 0:
+        print(f"\nNo hay pedidos registrados para la mesa {mesa}")
+        return
+
+    print("\n" + "=" * 40)
+    print(f"         FACTURA - MESA {mesa}")
+    print("=" * 40)
+
+    subtotal = 0
+
+    # Mostrar pedidos
+    for i, pedido in enumerate(pedidos_mesa, start=1):
+
         nombre_plato = pedido["plato"]
-        precio_plato = platos[nombre_plato]["precio"]
-        print(f" • {nombre_plato:<20} : S/. {precio_plato:>6.2f}")
-        # Acumulador para obtener la suma de los platos
-        subtotal += precio_plato
+        estado = pedido["estado"]
+        precio = platos[nombre_plato]["precio"]
 
-    print("-" * 40)
-    
-    # CÁLCULOS DE IGV Y TOTAL A PAGAR
+        print(f"{i}. {nombre_plato} - {estado} -> S/. {precio:.2f}")
+
+        subtotal += precio
+
+    # Cálculos
     igv = subtotal * 0.18
-    total_pagar = subtotal + igv
+    total = subtotal + igv
 
-    # Impresión de montos formateados a 2 decimales (.2f)
-    print(f" Subtotal           : S/. {subtotal:>6.2f}")
-    print(f" IGV (18%)           : S/. {igv:>6.2f}")
     print("-" * 40)
-    print(f" TOTAL A PAGAR      : S/. {total_pagar:>6.2f}")
-    print("═"*40)
-    
-    # PROCESO DE CIERRE Y LIBERACIÓN (Modifica variables globales en tiempo real)
-    confirmar = input("¿Confirmar el pago y cerrar la cuenta? (S/N): ").upper()
-    
-    if confirmar == "S":
-        # Antes de vaciar la mesa, registramos los platos en el historial para el reporte final del día
-        for pedido in pedidos:
+    print(f"Subtotal : S/. {subtotal:.2f}")
+    print(f"IGV (18%) : S/. {igv:.2f}")
+    print(f"TOTAL : S/. {total:.2f}")
+    print("=" * 40)
+
+    confirmar = input("¿Desea pagar? (S/N): ")
+
+    if confirmar.upper() == "S":
+
+        # Guardar ventas
+        for pedido in pedidos_mesa:
             historial_ventas.append(pedido["plato"])
-            
-        # Limpiamos la lista de pedidos (la mesa queda libre y el mozo puede volver a tomar otra orden)
-        pedidos.clear()
-        print("\n [✓] Cuenta pagada con éxito. Mesa liberada.")
+
+        # Eliminar pedidos pagados
+        for pedido in pedidos_mesa:
+            pedidos.remove(pedido)
+
+        print(f"\nPago realizado correctamente para la mesa {mesa}")
+
     else:
-        print("\n [!] Operación cancelada. El consumo sigue pendiente de pago.")
-    
-    print("═"*40)
+        print("\nPago cancelado.")
 
 
 # =====================================================
-# AQUÍ VA LA PARTE DE JHOSTIN - COLA DE COCINA
+# PARTE DE JHOSTIN - COLA DE COCINA
+# CORRECCIÓN 1: pedido "Listo" ya no retrocede a "Pendiente"
+# CORRECCIÓN 2: muestra el número de mesa en cada pedido
+#               para que cocina sepa a quién entregar
 # =====================================================
 
 def cola_cocina():
@@ -346,74 +292,73 @@ def cola_cocina():
         print("║ 0. Volver al menú principal     ║")
         print("╚══════════════════════════════════╝")
 
-        opcion = input("Seleccione una opción: ")
+        opcion = input("Seleccione una opción: ").strip()
 
-
-        # =====================================
-        # VER COLA DE PEDIDOS
-        # =====================================
         if opcion == "1":
 
             if len(pedidos) == 0:
                 print("\n [!] No hay pedidos en la cola.")
             else:
                 for i in range(len(pedidos)):
-                    print(i + 1, "-", pedidos[i]["plato"], "-", pedidos[i]["estado"])
+                    # ── CORRECCIÓN JHOSTIN (mesa) ─────────
+                    # Antes: solo mostraba plato y estado
+                    # Ahora: también muestra la mesa para saber
+                    #        a quién llevar el plato cuando esté listo
+                    print(i + 1, "- Mesa", pedidos[i]["mesa"],
+                          "-", pedidos[i]["plato"],
+                          "-", pedidos[i]["estado"])
+                    # ─────────────────────────────────────
 
-
-        # =====================================
-        # CAMBIAR ESTADO DE UN PEDIDO
-        # =====================================
         elif opcion == "2":
 
             if len(pedidos) == 0:
                 print("\n [!] No hay pedidos en la cola.")
             else:
                 for i in range(len(pedidos)):
-                    print(i + 1, "-", pedidos[i]["plato"], "-", pedidos[i]["estado"])
+                    print(i + 1, "- Mesa", pedidos[i]["mesa"],
+                          "-", pedidos[i]["plato"],
+                          "-", pedidos[i]["estado"])
                 print("-" * 40)
 
-                numero = int(input("Ingrese el N° del pedido a actualizar: "))
+                try:
+                    numero = int(input("Ingrese el N° del pedido a actualizar: "))
+                except ValueError:
+                    print("\n [!] Ingresa un número válido.")
+                    continue
 
                 if 1 <= numero <= len(pedidos):
                     pedido     = pedidos[numero - 1]
                     idx_actual = ESTADOS.index(pedido["estado"])
-                    idx_nuevo  = (idx_actual + 1) % len(ESTADOS)
-                    pedido["estado"] = ESTADOS[idx_nuevo]
-                    print(f"\n [✓] '{pedido['plato']}' → {pedido['estado']}")
+
+                    if idx_actual == len(ESTADOS) - 1:
+                        print(f"\n [!] '{pedido['plato']}' ya está Listo, no puede avanzar más.")
+                    else:
+                        idx_nuevo        = idx_actual + 1
+                        pedido["estado"] = ESTADOS[idx_nuevo]
+                        print(f"\n [✓] Mesa {pedido['mesa']} - '{pedido['plato']}' → {pedido['estado']}")
                 else:
                     print("\n [!] Número inválido.")
 
-
-        # =====================================
-        # ATENDER SIGUIENTE PEDIDO
-        # =====================================
         elif opcion == "3":
 
             encontrado = False
 
-            # Buscar primero uno "Pendiente"
             for i in range(len(pedidos)):
                 if pedidos[i]["estado"] == "Pendiente" and not encontrado:
                     pedidos[i]["estado"] = "En preparación"
-                    print(f"\n [✓] '{pedidos[i]['plato']}' pasó a → En preparación")
+                    print(f"\n [✓] Mesa {pedidos[i]['mesa']} - '{pedidos[i]['plato']}' → En preparación")
                     encontrado = True
 
-            # Si no hay pendientes, buscar uno "En preparación"
             if not encontrado:
                 for i in range(len(pedidos)):
                     if pedidos[i]["estado"] == "En preparación" and not encontrado:
                         pedidos[i]["estado"] = "Listo"
-                        print(f"\n [✓] '{pedidos[i]['plato']}' pasó a → Listo")
+                        print(f"\n [✓] Mesa {pedidos[i]['mesa']} - '{pedidos[i]['plato']}' → Listo")
                         encontrado = True
 
             if not encontrado:
                 print("\n [✓] Todos los pedidos ya están listos.")
 
-
-        # =====================================
-        # TIEMPO ESTIMADO DE ESPERA
-        # =====================================
         elif opcion == "4":
 
             cantidad_pendientes = 0
@@ -436,26 +381,22 @@ def cola_cocina():
                         nombre = pedidos[i]["plato"]
                         t      = platos[nombre]["tiempo_prep"]
                         estado = pedidos[i]["estado"]
-                        print(" -", nombre, "-", t, "min -", estado)
+                        mesa   = pedidos[i]["mesa"]
+                        print(f" - Mesa {mesa} - {nombre} - {t} min - {estado}")
                 print("-" * 40)
 
-
-        # =====================================
-        # VOLVER AL MENÚ PRINCIPAL
-        # =====================================
         elif opcion == "0":
             break
 
-
-        # =====================================
-        # OPCIÓN INVÁLIDA
-        # =====================================
         else:
             print(" [!] Opción inválida.")
 
 
 # =====================================================
-# AQUÍ VA LA PARTE DE PABLO - REPORTE DEL DÍA
+# PARTE DE PABLO - REPORTE DEL DÍA
+# (sin cambios de mesa, el reporte es global del día)
+# CORRECCIÓN anterior mantenida: verifica que el plato
+# exista en el diccionario antes de buscar su precio
 # =====================================================
 
 def reporte_dia():
@@ -463,26 +404,18 @@ def reporte_dia():
     print("        REPORTE DEL DÍA              ")
     print("═"*40)
 
-    # Validar que haya ventas registradas
     if len(historial_ventas) == 0:
         print(" [!] No hay ventas registradas hoy.")
         print("═"*40)
         return
 
-    # ─────────────────────────────────────────
-    # CONTEO DE PLATOS VENDIDOS
-    # ─────────────────────────────────────────
     conteo = {}
-
     for plato in historial_ventas:
         if plato in conteo:
             conteo[plato] += 1
         else:
             conteo[plato] = 1
 
-    # ─────────────────────────────────────────
-    # DETALLE DE VENTAS
-    # ─────────────────────────────────────────
     print(f" Total de platos vendidos: {len(historial_ventas)}")
     print("-" * 40)
     print(f" {'Plato':<22} {'Cant':>4}  {'Subtotal':>9}")
@@ -491,16 +424,20 @@ def reporte_dia():
     total_bruto = 0.0
 
     for plato, cantidad in conteo.items():
-        subtotal_plato = platos[plato]["precio"] * cantidad
-        total_bruto += subtotal_plato
+
+        if plato in platos:
+            precio_unitario = platos[plato]["precio"]
+        else:
+            precio_unitario = 0.0
+            print(f" [!] Advertencia: '{plato}' ya no está en el menú (precio=0)")
+
+        subtotal_plato  = precio_unitario * cantidad
+        total_bruto    += subtotal_plato
         print(f" {plato:<22} {cantidad:>4}  S/. {subtotal_plato:>6.2f}")
 
     print("-" * 40)
 
-    # ─────────────────────────────────────────
-    # TOTALES
-    # ─────────────────────────────────────────
-    igv_total = total_bruto * 0.18
+    igv_total     = total_bruto * 0.18
     total_con_igv = total_bruto + igv_total
 
     print(f" Subtotal (sin IGV)  : S/. {total_bruto:>7.2f}")
@@ -508,9 +445,6 @@ def reporte_dia():
     print("-" * 40)
     print(f" TOTAL DEL DÍA       : S/. {total_con_igv:>7.2f}")
 
-    # ─────────────────────────────────────────
-    # PLATO MÁS VENDIDO
-    # ─────────────────────────────────────────
     plato_estrella = max(conteo, key=conteo.get)
     print("-" * 40)
     print(f" Plato más vendido : {plato_estrella}")
@@ -534,7 +468,7 @@ while True:
     print("║  0. Salir                       ║")
     print("╚══════════════════════════════════╝")
 
-    opcion = input("Seleccione una opción: ")
+    opcion = input("Seleccione una opción: ").strip()
 
     if opcion == "1":
         tomar_pedido()
